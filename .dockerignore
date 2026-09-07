@@ -1,0 +1,15 @@
+**/.nuxt
+**/.output
+**/dist
+**/node_modules
+.git
+.github
+**/*.log
+**/coverage
+.env
+.env.*
+!.env.example
+docs
+*.md
+scripts
+tests

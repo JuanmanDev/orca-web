@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+:root {
+  --orca-bg: #0b0e12;
+}
+
+html, body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+/* xterm.js fills its container; the pane wrapper controls size */
+.terminal-pane {
+  padding: 0.5rem 0 0 0.5rem;
+  background: #0b0e12;
+  border-radius: 0.5rem;
+  min-height: 320px;
+  height: 60vh;
+}

@@ -1,0 +1,62 @@
+{
+  "name": "orca-web",
+  "version": "0.1.0",
+  "description": "Self-hosted web client for Orca — monitor and steer your agent fleet from any browser",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@12.3.4",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "unrs-resolver",
+      "vue-demi",
+      "better-sqlite3"
+    ]
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "dev:mock": "node scripts/dev-mock.mjs",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "mock-server": "tsx scripts/mock-server.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:e2e": "tsx --tsconfig tsconfig.tools.json tests/e2e-protocol.ts",
+    "test:client-e2e": "tsx --tsconfig tsconfig.tools.json tests/client-e2e.ts",
+    "test:watch": "vitest",
+    "docker:build": "docker build -t orca-web .",
+    "docker:run": "docker run --rm -p 3013:3000 orca-web"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.11.0",
+    "@pinia/nuxt": "^0.11.1",
+    "@xterm/xterm": "^6.0.0",
+    "nuxt": "^4.5.2",
+    "pinia": "^3.0.3",
+    "tailwindcss": "^4.1.11",
+    "tweetnacl": "^1.0.3",
+    "vue": "^3.5.17",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
+    "@nuxt/test-utils": "^4.2.0",
+    "@types/node": "^22.16.3",
+    "@types/ws": "^8.18.1",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.30.0",
+    "happy-dom": "^18.0.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^2.2.10",
+    "ws": "^8.18.2"
+  }
+}

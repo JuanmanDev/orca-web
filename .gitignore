@@ -1,0 +1,10 @@
+dist
+.output
+.nuxt
+.data
+.env
+logs
+*.log
+coverage
+node_modules
+Dockerfile.local
