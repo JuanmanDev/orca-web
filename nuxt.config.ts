@@ -21,17 +21,28 @@ export default defineNuxtConfig({
     },
   },
 
-  runtimeConfig: {
-    // Server-side only. When set, /api/health reports the demo host.
-    mockRuntimeUrl: process.env.NUXT_MOCK_RUNTIME_URL ?? '',
-  },
-
   // The runtime client is 100% browser-side; nothing about paired hosts
   // should ever reach the server logs.
   telemetry: false,
 
   routeRules: {
     '/': { ssr: false },
+    // Security invariants for the SPA shell:
+    //  - default-src 'self': no CDN scripts, no external anything
+    //  - connect-src: ONLY the app itself + ws/wss dials to the user's
+    //    Orca runtime — credentials (device tokens) can only ever travel
+    //    over the E2EE WebSocket to the paired host, never to any other
+    //    origin. No fetch/XHR to the internet is possible, period.
+    //  - form-action 'none': nothing is ever form-posted anywhere
+    '/**': {
+      headers: {
+        'content-security-policy':
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws: wss:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'",
+        'referrer-policy': 'no-referrer',
+        'x-content-type-options': 'nosniff',
+        'x-frame-options': 'DENY',
+      },
+    },
   },
 
   future: {

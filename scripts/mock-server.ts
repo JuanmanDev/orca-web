@@ -22,6 +22,9 @@ import type { RpcRequest } from '../shared/protocol'
 
 const PORT = Number(process.env.PORT) || 6768
 const AUTH_TOKEN = process.env.MOCK_AUTH_TOKEN || 'mock-device-token'
+// Loopback-only unless explicitly overridden — the mock mints a known
+// device token, so it must never be reachable from the network by default.
+const HOST = process.env.MOCK_HOST ?? '127.0.0.1'
 
 // Fresh server keypair per run (the real runtime persists one; the mock does
 // not need to survive restarts).
@@ -30,7 +33,7 @@ const serverPublicKeyB64 = publicKeyToBase64(serverKeyPair.publicKey)
 
 type E2EEState = { sharedKey: Uint8Array; deviceToken: string | null; authenticated: boolean }
 
-const wss = new WebSocketServer({ port: PORT })
+const wss = new WebSocketServer({ port: PORT, host: HOST })
 const connectionState = new Map<WebSocket, E2EEState>()
 const mockRuntime = createMockRuntimeHandlers()
 
@@ -133,17 +136,17 @@ function handleHandshake(ws: WebSocket, msg: string): void {
   console.log('[mock] E2EE key exchange complete — waiting for encrypted auth')
 }
 
-const pairingUrl = encodePairingUrl({
-  endpoint: `ws://localhost:${PORT}`,
-  deviceToken: AUTH_TOKEN,
-  serverPublicKeyB64,
-  label: 'Mock Orca runtime',
-})
-
-console.log(`[mock] Orca mock server listening on ws://localhost:${PORT}`)
+console.log(`[mock] Orca mock server listening on ws://${HOST}:${PORT}`)
 console.log(`[mock] Auth token: ${AUTH_TOKEN}`)
 console.log(`[mock] Server public key (base64): ${serverPublicKeyB64}`)
 console.log(
   `[mock] Scenario: ${defaultMockScenario.repoCount} repos, ${defaultMockScenario.worktreeCount} worktrees, ${defaultMockScenario.rpcDelayMs}ms default RPC delay`,
 )
-console.log(`[mock] Pairing URL: ${pairingUrl}`)
+console.log(
+  `[mock] Pairing URL: ${encodePairingUrl({
+    endpoint: `ws://${HOST}:${PORT}`,
+    deviceToken: AUTH_TOKEN,
+    serverPublicKeyB64,
+    label: 'Mock Orca runtime',
+  })}`,
+)

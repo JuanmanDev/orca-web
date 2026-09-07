@@ -26,3 +26,19 @@ You should receive a response within 72 hours.
   (X25519 ECDH + XSalsa20-Poly1305 via the shared protocol library).
   Any change that weakens that must be rejected.
 - A pairing URL is a capability. Treat it like a password.
+
+These are enforced, not just documented:
+
+- **CSP** — the served pages ship `default-src 'self'` with
+  `connect-src 'self' ws: wss:`: the browser itself blocks any outbound
+  HTTP request from orca-web code to any origin. Credentials can only
+  travel over the E2EE WebSocket to the paired host. `form-action 'none'`
+  and `Referrer-Policy: no-referrer` close the remaining leak paths.
+- **Static guard** — `tests/credential-guard.test.ts` fails CI if client
+  code ever adds `fetch`/`XMLHttpRequest`/`sendBeacon`/`EventSource`,
+  constructs a WebSocket outside the runtime client, touches
+  localStorage outside the hosts store, or hardcodes a third-party
+  origin. New outbound channels must go through review by design.
+- **Mock runtime binds loopback only** — the dev mock mints a known
+  device token, so it listens on 127.0.0.1 unless `MOCK_HOST` explicitly
+  overrides it.

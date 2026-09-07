@@ -7,6 +7,8 @@ import { generateKeyPair, deriveSharedKey, publicKeyToBase64, encryptForNode, de
 
 const PORT = 16868
 const TOKEN = 'e2e-token'
+// Match the mock's default loopback bind (MOCK_HOST default is 127.0.0.1).
+const HOST = '127.0.0.1'
 
 type JsonRecord = Record<string, unknown>
 
@@ -26,7 +28,7 @@ function wait(ms: number): Promise<void> {
 
 async function connectUntilReady(): Promise<void> {
   for (let attempt = 0; attempt < 40; attempt++) {
-    if (output.includes(`ws://localhost:${PORT}`)) {
+    if (output.includes(`ws://${HOST}:${PORT}`)) {
       return
     }
     await wait(250)
@@ -71,7 +73,7 @@ async function main() {
     throw new Error('mock server did not print a pairing URL')
   }
 
-  const ws = new WebSocket(`ws://localhost:${PORT}`)
+  const ws = new WebSocket(`ws://${HOST}:${PORT}`)
   await new Promise<void>((resolve, reject) => {
     ws.on('open', resolve)
     ws.on('error', reject)
