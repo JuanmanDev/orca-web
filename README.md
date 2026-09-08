@@ -33,10 +33,12 @@ Orca ships desktop and mobile companions, but teams often want a **zero-install,
 ## Features
 
 - 🔐 **Native pairing** — paste the `orca://pair?code=…` URL from Settings → Mobile (desktop) or from `orca serve` startup output; orca-web performs the same Curve25519 ECDH + XSalsa20-Poly1305 handshake as the mobile app. Your device token never leaves your browser.
-- 🗂 **Worktree fleet dashboard** — all worktrees across your repos, grouped by repo with agent status, live terminal counts, linked PRs/Linear issues, unread state, and 5s auto-refresh.
-- 🖥 **Live terminal viewer** — xterm.js rendering of `terminal.subscribe` scrollback + stream, with keyboard input forwarded to the host PTY via `terminal.send`.
+- 🗂 **Worktree fleet dashboard** — full-width, mobile-friendly grid grouped by repo, with agent status, linked PRs/Linear issues, unread state, and 5s auto-refresh. Every terminal is a chip with a live state icon (processing / asking / running / idle) and opens directly.
+- 🖥 **Session view, Orca-style** — terminal tabs exactly like the desktop app, each badged with its activity state. Add terminals from host-provided profiles (PowerShell, Git Bash, zsh, Claude, Codex, Gemini, …), close panes, and pick a layout: fit-to-container, full-window, or locked to the host's PTY size. Resizes sync to the host via `terminal.resize`.
+- 📊 **Status bar** — account rate limits per provider plus host CPU, RAM, active agents, and running processes, Orca desktop style.
+- 🎨 **Theming** — light/dark/system color modes and six accent colors, persisted per browser.
 - 🧭 **Protocol-safe** — version negotiation (`status.get` + compat window) hard-blocks instead of silently misbehaving, mirroring upstream's compatibility rules.
-- 🎭 **Bundled mock runtime** — a faithful port of upstream's mobile mock server, so you can develop and demo without a paired Orca host.
+- 🎭 **Bundled mock runtime** — a faithful port of upstream's mobile mock server with the full terminal-registry, profiles, accounts, and metrics surface — develop and demo without a paired Orca host.
 - 🐳 **One-command deploy** — multi-stage Docker image, published to GHCR by CI on every tag.
 
 ## Quick start

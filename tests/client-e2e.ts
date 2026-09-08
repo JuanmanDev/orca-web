@@ -114,12 +114,55 @@ async function main() {
   await client.sendTerminalInput('term-1', 'git status\r')
   sub.unsubscribe()
 
+  // --- New surfaces (v0.2): terminal profiles / create / close / resize,
+  // worktree terminal summaries, accounts, system metrics. ---
+  const { profiles } = await client.listTerminalProfiles()
+  if (profiles.length < 3) throw new Error(`expected terminal profiles, got ${profiles.length}`)
+  if (!profiles.some((p) => p.kind === 'shell') || !profiles.some((p) => p.kind === 'agent')) {
+    throw new Error('profiles missing shell or agent kinds')
+  }
+
+  const created = await client.createTerminal(`id:${worktrees[0]!.worktreeId}`, 'powershell', 'mutation-e2e-1')
+  if (!created.handle) throw new Error('createTerminal returned no handle')
+
+  // Idempotent replay with the same clientMutationId must return a handle
+  // (the mock dedups).
+  const replay = await client.createTerminal(`id:${worktrees[0]!.worktreeId}`, 'powershell', 'mutation-e2e-1')
+  if (!replay.handle) throw new Error('idempotent replay returned no handle')
+
+  await client.resizeTerminal(created.handle, 120, 40)
+
+  const summaries = await client.listTerminalSummaries(`id:${worktrees[0]!.worktreeId}`)
+  if (!summaries.terminals.some((t) => t.handle === created.handle)) {
+    throw new Error('created terminal missing from worktree summaries')
+  }
+  if (!summaries.terminals.every((t) => ['processing', 'asking', 'running', 'idle'].includes(t.activity))) {
+    throw new Error('terminal summaries missing activity states')
+  }
+
+  const { accounts } = await client.getAccounts()
+  if (accounts.length < 1 || !accounts[0]!.rateLimitReset) {
+    throw new Error('accounts.get returned no rate limits')
+  }
+
+  const metrics = await client.getSystemMetrics()
+  if (typeof metrics.cpuPercent !== 'number' || typeof metrics.activeAgents !== 'number') {
+    throw new Error('system metrics malformed')
+  }
+
+  await client.closeTerminal(created.handle)
+  const afterClose = await client.listTerminalSummaries(`id:${worktrees[0]!.worktreeId}`)
+  if (afterClose.terminals.some((t) => t.handle === created.handle)) {
+    throw new Error('closed terminal still listed')
+  }
+
   client.dispose()
   if (!phases.includes('connected')) throw new Error(`phases missing connected: ${phases.join(',')}`)
 
   console.log('CLIENT E2E OK — real OrcaRuntimeClient against real mock runtime')
   console.log(`phases: ${phases.join(' → ')}`)
   console.log(`logs: ${logs.length} entries`)
+  console.log(`new surface: ${profiles.length} profiles, ${accounts.length} accounts, cpu ${metrics.cpuPercent}%`)
   process.exit(0)
 }
 

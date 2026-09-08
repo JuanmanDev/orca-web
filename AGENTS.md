@@ -27,14 +27,24 @@ launches with recorded PIDs, and always kill them afterward.
 - `shared/` is the wire contract with the Orca runtime, ported from
   stablyai/orca. It is imported by BOTH the browser client
   (`app/composables/runtime/`) and the mock runtime (`scripts/`). Changes
-  here are protocol changes — mirror upstream, never invent.
+  here are protocol changes — mirror upstream, never invent. Additive
+  methods (terminal.create/resize/close/listProfiles, accounts.get,
+  system.getMetrics) are capability-gated on the client and degrade
+  gracefully (method_not_found → feature hidden).
 - `scripts/mock-server-runtime.ts` is a faithful port of upstream's mobile
-  mock server; when adding RPC surface, add it here and in `shared/protocol.ts`
-  together, plus a test in `tests/`.
+  mock server plus the additive surfaces; when adding RPC surface, add it
+  here and in `shared/protocol.ts` together, plus a test in `tests/` and
+  coverage in `tests/client-e2e.ts`.
 - `app/composables/runtime/client.ts` is the ported transport
   (direct-rpc-client.ts upstream). One client per host; the Pinia store
-  `app/stores/hosts.ts` owns lifecycles.
+  `app/stores/hosts.ts` owns lifecycles. `app/stores/theme.ts` holds UI
+  preferences only (never credentials — guard-tested).
 - Pages are client-only (SPA). No host data is ever available server-side.
+- Terminal states: `processing | asking | running | idle`
+  (TerminalActivityIcon maps them to badges like Orca desktop).
+- Theme accent swaps override `--ui-primary` on `<html>` — do NOT use
+  dynamic Tailwind classes (`bg-${color}-500`); they get purged. Use static
+  classes or inline styles.
 
 ## Conventions
 
@@ -56,6 +66,8 @@ launches with recorded PIDs, and always kill them afterward.
   `end` tears the client's subscription down.
 - `id:` selectors: worktree selectors may be `id:<worktreeId>` or the bare
   id; strip the prefix before comparing.
+- `terminal.create` is idempotent via `clientMutationId` — replaying a
+  lost reply must return the same handle, never duplicate panes.
 
 ## Security invariants
 

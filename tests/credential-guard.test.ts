@@ -62,12 +62,17 @@ describe('credential-leak guard: no outbound HTTP from client code', () => {
   })
 })
 
-describe('credential-leak guard: localStorage only in the hosts store', () => {
-  it('localStorage/sessionStorage appear only in stores/hosts.ts', () => {
+describe('credential-leak guard: localStorage only in app stores', () => {
+  const ALLOWED_STORE_FILES = [
+    join('stores', 'hosts.ts'),
+    join('stores', 'theme.ts'),
+  ]
+
+  it('localStorage/sessionStorage appear only in allowed store files', () => {
     const offenders: string[] = []
     for (const file of APP_FILES) {
       const code = readFileSync(file, 'utf8')
-      if (/(local|session)Storage/.test(code) && !file.endsWith(join('stores', 'hosts.ts'))) {
+      if (/(local|session)Storage/.test(code) && !ALLOWED_STORE_FILES.some((allowed) => file.endsWith(allowed))) {
         offenders.push(file)
       }
     }
@@ -80,6 +85,12 @@ describe('credential-leak guard: localStorage only in the hosts store', () => {
     // No other storage keys sneak in.
     const matches = code.match(/orca-web:[\w:-]+/g) ?? []
     expect(new Set(matches)).toEqual(new Set(['orca-web:hosts:v1']))
+  })
+
+  it('theme store persists only UI preferences (never credentials)', () => {
+    const code = readFileSync(join(ROOT, 'app', 'stores', 'theme.ts'), 'utf8')
+    expect(code).toContain("'orca-web:theme:v1'")
+    expect(code).not.toMatch(/deviceToken|serverPublicKey|endpoint/i)
   })
 })
 

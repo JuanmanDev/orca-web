@@ -113,6 +113,8 @@ export type RuntimeWorktreePsSummary = {
   preview: string | null
   status: 'active' | 'working' | 'done' | string
   agents: RuntimeWorktreeAgentRow[]
+  /** Per-terminal live state, derived from the registry (additive). */
+  terminals?: WorktreeTerminalSummary[]
 }
 
 export type RuntimeTerminal = {
@@ -121,6 +123,28 @@ export type RuntimeTerminal = {
   title: string
   isActive: boolean
   hasRunningProcess: boolean
+}
+
+// Terminal interactive state, mirroring how Orca desktop badges terminals:
+// an agent may be processing, waiting on a user answer, running a shell
+// command, or sitting idle at a prompt.
+export type TerminalActivityState = 'processing' | 'asking' | 'running' | 'idle'
+
+export type RuntimeTerminalSummary = {
+  handle: string
+  title: string
+  /** Agent identity when this PTY hosts a coding agent (e.g. "claude"). */
+  agentType: string | null
+  /** What the agent/PTY is doing right now. */
+  activity: TerminalActivityState
+  hasRunningProcess: boolean
+  updatedAt: number
+}
+
+// Worktree row enriched with per-terminal state — the mobile app's session
+// tabs use the same shape.
+export type WorktreeTerminalSummary = RuntimeTerminalSummary & {
+  worktreeId: string
 }
 
 export type RuntimeStatus = {
@@ -140,6 +164,44 @@ export type TerminalStreamEvent =
   | { type: 'end' }
 
 // ---------------------------------------------------------------------------
+// Newer surfaces (additive; guarded by capability or method_not_found)
+// ---------------------------------------------------------------------------
+
+/** Account row as shown in Orca's bottom bar. */
+export type RuntimeAccount = {
+  provider: string
+  accountLabel: string
+  /** e.g. "5h left" / "resets 2h" */
+  rateLimitReset?: string | null
+  usage?: string | null
+  /** null = healthy, string = restricted/limited reason. */
+  limitedUntil?: string | null
+}
+
+/** System metrics from the host, Orca bottom-bar style. */
+export type RuntimeSystemMetrics = {
+  cpuPercent: number
+  memoryPercent: number
+  memoryUsedMb: number
+  memoryTotalMb: number
+  /** Live agent panes across the runtime. */
+  activeAgents: number
+  runningProcesses: number
+  terminalCount: number
+}
+
+/** Terminal creation profile, mirroring Orca's "add terminal" menu. */
+export type TerminalProfile = {
+  id: string
+  label: string
+  /** lucide icon name for UI. */
+  icon: string
+  /** Shell/agent command the host runs, when meaningful. */
+  command?: string | null
+  kind: 'shell' | 'agent'
+}
+
+// ---------------------------------------------------------------------------
 // RPC method names (dot-namespace, as exposed by `orca serve`)
 // ---------------------------------------------------------------------------
 
@@ -152,4 +214,11 @@ export const Rpc = {
   terminalUnsubscribe: 'terminal.unsubscribe',
   terminalSend: 'terminal.send',
   worktreeActivate: 'worktree.activate',
+  // Additive surface (v3-compatible, capability-gated on the client):
+  terminalCreate: 'terminal.create',
+  terminalResize: 'terminal.resize',
+  terminalClose: 'terminal.close',
+  terminalListProfiles: 'terminal.listProfiles',
+  accountsGet: 'accounts.get',
+  systemGetMetrics: 'system.getMetrics',
 } as const

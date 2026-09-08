@@ -91,17 +91,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="w-full px-3 sm:px-4 lg:px-6 py-6">
     <!-- Empty state: no hosts -->
-    <div v-if="store.hosts.length === 0" class="flex flex-col items-center gap-4 py-20 text-center">
+    <div v-if="store.hosts.length === 0" class="flex flex-col items-center gap-4 py-20 text-center max-w-xl mx-auto">
       <span class="i-simple-icons-orca text-6xl text-primary" aria-hidden />
       <h1 class="text-2xl font-bold text-highlighted">Connect your Orca runtime</h1>
-      <p class="text-muted max-w-md">
+      <p class="text-muted text-sm">
         orca-web talks to the same encrypted runtime endpoint the Orca mobile app uses.
         Pair with the QR code from <span class="text-highlighted">Settings → Mobile</span> in your
         Orca desktop app, or point it at a headless <code class="text-xs">orca serve</code> host.
       </p>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center justify-center gap-3">
         <UButton to="/connect" icon="i-lucide-qr-code" size="lg" label="Add your first host" />
         <UButton
           to="https://www.onorca.dev/docs/mobile"
@@ -157,14 +157,15 @@ onBeforeUnmount(() => {
         No worktrees on this host yet.
       </div>
 
-      <div v-else class="flex flex-col gap-8">
+      <div v-else class="flex flex-col gap-6">
         <section v-for="group in grouped" :key="group.repo" :aria-label="`Repo ${group.repo}`">
-          <div class="flex items-center gap-2 mb-3">
+          <div class="flex items-center gap-2 mb-2">
             <span class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: group.color }" />
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-muted">{{ group.repo }}</h2>
+            <h2 class="text-xs font-semibold uppercase tracking-wide text-muted">{{ group.repo }}</h2>
             <UBadge :label="String(group.rows.length)" color="neutral" variant="subtle" size="sm" />
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <!-- Wider grids: 2 cols on tablet, 3 on lg, 4 on 2xl -->
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
             <WorktreeCard
               v-for="wt in group.rows"
               :key="wt.worktreeId"

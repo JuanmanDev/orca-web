@@ -10,10 +10,14 @@ import {
   Rpc,
   type RpcRequest,
   type RpcResponse,
+  type RuntimeAccount,
   type RuntimeRepo,
   type RuntimeStatus,
+  type RuntimeSystemMetrics,
   type RuntimeTerminal,
+  type RuntimeTerminalSummary,
   type RuntimeWorktreePsSummary,
+  type TerminalProfile,
   type TerminalStreamEvent,
 } from '@shared/protocol'
 import {
@@ -390,6 +394,16 @@ export class OrcaRuntimeClient {
     return (await this.call(Rpc.worktreePs, {})) as { worktrees: RuntimeWorktreePsSummary[] }
   }
 
+  /** Per-terminal live state for a worktree (session tabs). */
+  async listTerminalSummaries(
+    worktreeSelector: string,
+  ): Promise<{ terminals: RuntimeTerminalSummary[] }> {
+    const ps = await this.listWorktrees()
+    const selector = worktreeSelector.startsWith('id:') ? worktreeSelector.slice(3) : worktreeSelector
+    const worktree = ps.worktrees.find((w) => w.worktreeId === selector)
+    return { terminals: worktree?.terminals ?? [] }
+  }
+
   async listRepos(): Promise<{ repos: RuntimeRepo[] }> {
     return (await this.call(Rpc.repoList, {})) as { repos: RuntimeRepo[] }
   }
@@ -398,6 +412,49 @@ export class OrcaRuntimeClient {
     return (await this.call(Rpc.terminalList, { worktree: worktreeSelector })) as {
       terminals: RuntimeTerminal[]
     }
+  }
+
+  /** List the host's terminal profiles (PowerShell, Git Bash, agents…). */
+  async listTerminalProfiles(): Promise<{ profiles: TerminalProfile[] }> {
+    return (await this.call(Rpc.terminalListProfiles, {})) as { profiles: TerminalProfile[] }
+  }
+
+  /**
+   * Create a terminal from a profile. Uses an idempotent clientMutationId
+   * so a lost reply can be retried without spawning duplicates (mirrors
+   * upstream's terminal.create idempotency capability).
+   */
+  async createTerminal(
+    worktreeSelector: string,
+    profileId: string,
+    clientMutationId: string,
+  ): Promise<{ handle: string }> {
+    const result = (await this.call(Rpc.terminalCreate, {
+      worktree: worktreeSelector,
+      profileId,
+      clientMutationId,
+    })) as { handle: string }
+    return result
+  }
+
+  /** Close (kill) a terminal pane on the host. */
+  async closeTerminal(handle: string): Promise<void> {
+    await this.call(Rpc.terminalClose, { terminal: handle })
+  }
+
+  /** Resize the host PTY to match the client viewport. */
+  async resizeTerminal(handle: string, cols: number, rows: number): Promise<void> {
+    await this.call(Rpc.terminalResize, { terminal: handle, cols, rows })
+  }
+
+  /** Accounts + rate limits for the bottom bar (Orca desktop style). */
+  async getAccounts(): Promise<{ accounts: RuntimeAccount[] }> {
+    return (await this.call(Rpc.accountsGet, {})) as { accounts: RuntimeAccount[] }
+  }
+
+  /** Host system metrics (CPU/RAM/agents) for the bottom bar. */
+  async getSystemMetrics(): Promise<RuntimeSystemMetrics> {
+    return (await this.call(Rpc.systemGetMetrics, {})) as RuntimeSystemMetrics
   }
 
   /** Subscribe to a terminal stream. Returns an unsubscribe function. */
